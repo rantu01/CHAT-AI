@@ -52,7 +52,13 @@ async function fetchStatus() {
     throw new Error("Status request failed");
   }
 
-  return response.json();
+  const payload = await response.json();
+
+  if (payload?.success === false) {
+    throw new Error(payload.error || "Status request failed");
+  }
+
+  return payload;
 }
 
 async function startBot() {
@@ -67,7 +73,13 @@ async function startBot() {
     throw new Error("Unable to start bot");
   }
 
-  return response.json();
+  const payload = await response.json();
+
+  if (payload?.success === false) {
+    throw new Error(payload.error || "Unable to start bot");
+  }
+
+  return payload;
 }
 
 async function resetBot() {
@@ -82,7 +94,13 @@ async function resetBot() {
     throw new Error("Unable to reset bot session");
   }
 
-  return response.json();
+  const payload = await response.json();
+
+  if (payload?.success === false) {
+    throw new Error(payload.error || "Unable to reset bot session");
+  }
+
+  return payload;
 }
 
 export default function BotDashboard() {
