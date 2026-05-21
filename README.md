@@ -134,7 +134,9 @@ pm2 delete rantu-ai-bot
 
 ## Vercel deploy
 
-The dashboard and API routes can be deployed to Vercel, but the long-lived WhatsApp socket is not a good fit for serverless hosting.
+The dashboard can be deployed to Vercel, but the long-lived WhatsApp socket is not a good fit for serverless hosting.
+
+On Vercel, the app now runs in dashboard-only mode and will not try to start the WhatsApp bot.
 
 If you still deploy the UI to Vercel:
 

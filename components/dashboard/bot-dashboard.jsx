@@ -12,6 +12,7 @@ const initialState = {
   lastReply: null,
   totalMessagesHandled: 0,
   sessionStatus: "not-started",
+  deploymentMode: "unknown",
 };
 
 function formatTimestamp(timestamp) {
@@ -109,6 +110,7 @@ export default function BotDashboard() {
   const [booting, setBooting] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [error, setError] = useState(null);
+  const isVercelDashboardOnly = state.deploymentMode === "vercel-dashboard-only";
 
   useEffect(() => {
     let mounted = true;
@@ -146,6 +148,10 @@ export default function BotDashboard() {
   }, []);
 
   useEffect(() => {
+    if (isVercelDashboardOnly) {
+      return undefined;
+    }
+
     let mounted = true;
 
     const boot = async () => {
@@ -176,7 +182,7 @@ export default function BotDashboard() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [isVercelDashboardOnly]);
 
   const qrVisible = Boolean(state.qrCodeDataUrl);
 
@@ -214,6 +220,10 @@ export default function BotDashboard() {
                 <StatusPill label="Connection" value={state.connectionStatus} />
                 <StatusPill label="QR" value={state.qrStatus} />
                 <StatusPill label="Session" value={state.sessionStatus} />
+                <StatusPill
+                  label="Mode"
+                  value={isVercelDashboardOnly ? "Vercel dashboard-only" : "Self-hosted bot"}
+                />
               </div>
 
               <div className="grid gap-3 sm:grid-cols-3">
@@ -264,6 +274,13 @@ export default function BotDashboard() {
               <button
                 type="button"
                 onClick={async () => {
+                  if (isVercelDashboardOnly) {
+                    setError(
+                      "WhatsApp auto reply cannot run on Vercel. Move the bot to a VPS or always-on Node server."
+                    );
+                    return;
+                  }
+
                   setBooting(true);
                   setError(null);
 
@@ -281,14 +298,25 @@ export default function BotDashboard() {
                   }
                 }}
                 className="mt-5 inline-flex w-full items-center justify-center rounded-2xl bg-cyan-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-70"
-                disabled={booting}
+                disabled={booting || isVercelDashboardOnly}
               >
-                {booting ? "Starting bot..." : "Refresh WhatsApp session"}
+                {isVercelDashboardOnly
+                  ? "Not available on Vercel"
+                  : booting
+                    ? "Starting bot..."
+                    : "Refresh WhatsApp session"}
               </button>
 
               <button
                 type="button"
                 onClick={async () => {
+                  if (isVercelDashboardOnly) {
+                    setError(
+                      "WhatsApp session reset is unavailable on Vercel because the bot process is not running there."
+                    );
+                    return;
+                  }
+
                   setResetting(true);
                   setError(null);
 
@@ -306,10 +334,21 @@ export default function BotDashboard() {
                   }
                 }}
                 className="mt-3 inline-flex w-full items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-70"
-                disabled={resetting}
+                disabled={resetting || isVercelDashboardOnly}
               >
-                {resetting ? "Resetting session..." : "Reset WhatsApp session"}
+                {isVercelDashboardOnly
+                  ? "Reset unavailable on Vercel"
+                  : resetting
+                    ? "Resetting session..."
+                    : "Reset WhatsApp session"}
               </button>
+
+              {isVercelDashboardOnly ? (
+                <div className="mt-4 rounded-2xl border border-amber-400/20 bg-amber-400/10 p-4 text-sm text-amber-100">
+                  Vercel dashboard-only mode is active. The UI can show status, but Baileys WhatsApp
+                  auto reply must run on a VPS or an always-on Node server.
+                </div>
+              ) : null}
             </div>
           </div>
         </section>
